@@ -14,13 +14,13 @@ export const SoundboardWidget: React.FC = () => {
   const [activeSoundId, setActiveSoundId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Using GitHub Raw as a reliable CDN for small assets
+  // Using raw.githubusercontent.com avoids 302 redirects which can sometimes block audio in strict environments
   const sounds: Sound[] = [
     { 
       id: 'airhorn', 
       label: 'Air Horn', 
       icon: <Megaphone size={40} />, 
-      url: 'https://github.com/mowglin/soundboard/raw/master/sounds/airhorn.mp3', 
+      url: 'https://raw.githubusercontent.com/mowglin/soundboard/master/sounds/airhorn.mp3', 
       color: 'bg-red-500 hover:bg-red-400',
       textColor: 'text-white'
     },
@@ -28,7 +28,7 @@ export const SoundboardWidget: React.FC = () => {
       id: 'applause', 
       label: 'Applause', 
       icon: <ThumbsUp size={40} />, 
-      url: 'https://github.com/mowglin/soundboard/raw/master/sounds/applause.mp3', 
+      url: 'https://raw.githubusercontent.com/mowglin/soundboard/master/sounds/applause.mp3', 
       color: 'bg-green-500 hover:bg-green-400',
       textColor: 'text-white'
     },
@@ -36,8 +36,7 @@ export const SoundboardWidget: React.FC = () => {
       id: 'correct', 
       label: 'Correct', 
       icon: <Star size={40} />, 
-      // Super Mario Coin sound style
-      url: 'https://github.com/mowglin/soundboard/raw/master/sounds/coin.mp3', 
+      url: 'https://raw.githubusercontent.com/mowglin/soundboard/master/sounds/coin.mp3', 
       color: 'bg-yellow-400 hover:bg-yellow-300',
       textColor: 'text-yellow-900'
     },
@@ -45,8 +44,7 @@ export const SoundboardWidget: React.FC = () => {
       id: 'wrong', 
       label: 'Wrong', 
       icon: <XCircle size={40} />, 
-      // Sad Trombone
-      url: 'https://github.com/mowglin/soundboard/raw/master/sounds/sad_trombone.mp3', 
+      url: 'https://raw.githubusercontent.com/mowglin/soundboard/master/sounds/sad_trombone.mp3', 
       color: 'bg-gray-800 hover:bg-gray-700',
       textColor: 'text-white'
     },
@@ -54,7 +52,7 @@ export const SoundboardWidget: React.FC = () => {
       id: 'boo', 
       label: 'Boo', 
       icon: <ThumbsDown size={40} />, 
-      url: 'https://github.com/mowglin/soundboard/raw/master/sounds/boo.mp3', 
+      url: 'https://raw.githubusercontent.com/mowglin/soundboard/master/sounds/boo.mp3', 
       color: 'bg-orange-500 hover:bg-orange-400',
       textColor: 'text-white'
     },
@@ -62,7 +60,7 @@ export const SoundboardWidget: React.FC = () => {
       id: 'drum', 
       label: 'Drum Roll', 
       icon: <Drum size={40} />, 
-      url: 'https://github.com/mowglin/soundboard/raw/master/sounds/badumtss.mp3', 
+      url: 'https://raw.githubusercontent.com/mowglin/soundboard/master/sounds/badumtss.mp3', 
       color: 'bg-blue-500 hover:bg-blue-400',
       textColor: 'text-white'
     },
@@ -88,18 +86,15 @@ export const SoundboardWidget: React.FC = () => {
   };
 
   const toggleSound = (sound: Sound) => {
-    // If clicking the active sound button, stop it
     if (activeSoundId === sound.id) {
         stopSound();
         return;
     }
 
-    // Stop any currently playing sound first
     stopSound();
     
     const audio = new Audio(sound.url);
-    // Removed crossOrigin="anonymous" to avoid CORS issues on simple playback if headers are missing
-    audio.loop = true; // Loop the sound until stopped manually
+    audio.loop = true;
     audio.volume = 0.8;
     
     audio.onerror = (e) => {
@@ -143,7 +138,6 @@ export const SoundboardWidget: React.FC = () => {
                       {isActive ? 'STOP' : sound.label}
                   </span>
                   
-                  {/* Ripple effect overlay */}
                   {isActive && (
                     <div className="absolute inset-0 bg-white/20 animate-pulse rounded-2xl" />
                   )}

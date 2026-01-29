@@ -10,15 +10,16 @@ import { AlarmWidget } from './components/widgets/AlarmWidget';
 import { CalendarWidget } from './components/widgets/CalendarWidget';
 import { SoundboardWidget } from './components/widgets/SoundboardWidget';
 import { DrawingWidget } from './components/widgets/DrawingWidget';
-import { editImageWithGemini } from './services/geminiService';
+import { editImageWithGemini, isConfigured } from './services/geminiService';
 import { WidgetType, AppStatus, ImageState } from './types';
 import { Polaroid } from './components/Polaroid';
-import { Upload, Sparkles, ListTodo, AlertTriangle, Eraser, ChevronLeft } from 'lucide-react';
+import { Upload, Sparkles, ListTodo, AlertTriangle, Eraser, ChevronLeft, AlertOctagon } from 'lucide-react';
 
 const App: React.FC = () => {
   const [activeWidget, setActiveWidget] = useState<WidgetType>('NONE');
   const [isNotepadOpen, setIsNotepadOpen] = useState(false);
   const [isTodoOpen, setIsTodoOpen] = useState(false);
+  const [hasApiKey, setHasApiKey] = useState(true);
   
   // Magic Art state
   const [magicImage, setMagicImage] = useState<ImageState | null>(null);
@@ -27,6 +28,11 @@ const App: React.FC = () => {
   const [magicStatus, setMagicStatus] = useState<AppStatus>(AppStatus.IDLE);
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Check API Key on mount
+  useEffect(() => {
+    setHasApiKey(isConfigured());
+  }, []);
 
   // Handle Paste for Magic Art
   useEffect(() => {
@@ -61,6 +67,11 @@ const App: React.FC = () => {
   const handleMagic = async () => {
     setErrorMessage('');
     
+    if (!hasApiKey) {
+        setErrorMessage("Setup Required: API Key is missing.");
+        return;
+    }
+
     if (!magicImage) {
         setErrorMessage("Please upload an image first!");
         return;
@@ -198,6 +209,14 @@ const App: React.FC = () => {
   return (
     <div className="h-screen w-screen overflow-hidden bg-orange-100 flex font-child relative">
       <div className="absolute inset-0 z-0 opacity-40 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/cork-board.png")' }}></div>
+      
+      {/* API Key Warning Banner */}
+      {!hasApiKey && (
+        <div className="absolute bottom-0 left-0 right-0 z-[100] bg-red-600 text-white p-3 shadow-lg flex items-center justify-center gap-3 animate-bounce">
+            <AlertOctagon size={24} />
+            <span className="font-child font-bold text-lg">SETUP REQUIRED: Please add "API_KEY" to your Vercel Environment Variables.</span>
+        </div>
+      )}
 
       {isNotepadOpen && <NotepadWidget onClose={() => setIsNotepadOpen(false)} />}
 

@@ -7,6 +7,13 @@ const apiKey = process.env.API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
 
 /**
+ * Checks if the API key is currently configured.
+ */
+export const isConfigured = (): boolean => {
+  return !!apiKey && apiKey.length > 0;
+};
+
+/**
  * Edits an image based on a text prompt using Gemini 2.5 Flash Image.
  */
 export const editImageWithGemini = async (
@@ -14,7 +21,7 @@ export const editImageWithGemini = async (
   prompt: string
 ): Promise<GenerationResult> => {
   if (!apiKey) {
-    throw new Error("Missing API Key. Please check your environment configuration.");
+    throw new Error("Missing API Key. Please add API_KEY to your environment variables.");
   }
 
   // Strip the prefix from the base64 string for the API
