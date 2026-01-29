@@ -14,12 +14,13 @@ export const SoundboardWidget: React.FC = () => {
   const [activeSoundId, setActiveSoundId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Using GitHub Raw as a reliable CDN for small assets
   const sounds: Sound[] = [
     { 
       id: 'airhorn', 
       label: 'Air Horn', 
       icon: <Megaphone size={40} />, 
-      url: 'https://www.myinstants.com/media/sounds/mlg-airhorn.mp3', 
+      url: 'https://github.com/mowglin/soundboard/raw/master/sounds/airhorn.mp3', 
       color: 'bg-red-500 hover:bg-red-400',
       textColor: 'text-white'
     },
@@ -27,8 +28,7 @@ export const SoundboardWidget: React.FC = () => {
       id: 'applause', 
       label: 'Applause', 
       icon: <ThumbsUp size={40} />, 
-      // Updated to MyInstants for better reliability
-      url: 'https://www.myinstants.com/media/sounds/applause_1.mp3', 
+      url: 'https://github.com/mowglin/soundboard/raw/master/sounds/applause.mp3', 
       color: 'bg-green-500 hover:bg-green-400',
       textColor: 'text-white'
     },
@@ -36,8 +36,8 @@ export const SoundboardWidget: React.FC = () => {
       id: 'correct', 
       label: 'Correct', 
       icon: <Star size={40} />, 
-      // Updated to MyInstants
-      url: 'https://www.myinstants.com/media/sounds/correct_2.mp3', 
+      // Super Mario Coin sound style
+      url: 'https://github.com/mowglin/soundboard/raw/master/sounds/coin.mp3', 
       color: 'bg-yellow-400 hover:bg-yellow-300',
       textColor: 'text-yellow-900'
     },
@@ -45,8 +45,8 @@ export const SoundboardWidget: React.FC = () => {
       id: 'wrong', 
       label: 'Wrong', 
       icon: <XCircle size={40} />, 
-      // Updated to MyInstants
-      url: 'https://www.myinstants.com/media/sounds/wrong_1.mp3', 
+      // Sad Trombone
+      url: 'https://github.com/mowglin/soundboard/raw/master/sounds/sad_trombone.mp3', 
       color: 'bg-gray-800 hover:bg-gray-700',
       textColor: 'text-white'
     },
@@ -54,7 +54,7 @@ export const SoundboardWidget: React.FC = () => {
       id: 'boo', 
       label: 'Boo', 
       icon: <ThumbsDown size={40} />, 
-      url: 'https://www.myinstants.com/media/sounds/boo.mp3', 
+      url: 'https://github.com/mowglin/soundboard/raw/master/sounds/boo.mp3', 
       color: 'bg-orange-500 hover:bg-orange-400',
       textColor: 'text-white'
     },
@@ -62,7 +62,7 @@ export const SoundboardWidget: React.FC = () => {
       id: 'drum', 
       label: 'Drum Roll', 
       icon: <Drum size={40} />, 
-      url: 'https://www.myinstants.com/media/sounds/drum-roll-sound-effect.mp3', 
+      url: 'https://github.com/mowglin/soundboard/raw/master/sounds/badumtss.mp3', 
       color: 'bg-blue-500 hover:bg-blue-400',
       textColor: 'text-white'
     },
@@ -98,13 +98,14 @@ export const SoundboardWidget: React.FC = () => {
     stopSound();
     
     const audio = new Audio(sound.url);
+    // Removed crossOrigin="anonymous" to avoid CORS issues on simple playback if headers are missing
     audio.loop = true; // Loop the sound until stopped manually
     audio.volume = 0.8;
     
     audio.onerror = (e) => {
       console.error("Error playing sound:", e);
       stopSound();
-      alert("Oops! This sound couldn't be loaded. It might be blocked by your network.");
+      alert("Oops! This sound couldn't be loaded.");
     };
 
     audio.play().catch(e => {
@@ -151,18 +152,18 @@ export const SoundboardWidget: React.FC = () => {
             })}
          </div>
          
-         <div className="mt-8 flex flex-col items-center gap-2 min-h-[60px]">
+         <div className="mt-8 flex flex-col items-center gap-2 min-h-[80px] justify-end">
             {activeSoundId ? (
                 <button 
                     onClick={stopSound}
-                    className="bg-red-600 text-white px-8 py-3 rounded-full font-chalk text-xl shadow-lg hover:bg-red-700 hover:scale-105 transition-all flex items-center gap-2 animate-in slide-in-from-bottom-2"
+                    className="bg-red-600 text-white px-10 py-4 rounded-full font-chalk text-2xl shadow-xl hover:bg-red-700 hover:scale-105 transition-all flex items-center gap-3 animate-in slide-in-from-bottom-2 border-4 border-red-800"
                 >
-                    <StopCircle size={24} />
+                    <StopCircle size={32} />
                     STOP SOUND
                 </button>
             ) : (
-                <div className="text-center text-gray-400 font-child text-sm">
-                    Tap a button to start looping a sound. Tap again to stop.
+                <div className="text-center text-gray-400 font-child text-lg opacity-60">
+                    Tap a button to start looping a sound.
                 </div>
             )}
          </div>

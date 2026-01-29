@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Bell, BellOff, Clock } from 'lucide-react';
 
 export const AlarmWidget: React.FC = () => {
@@ -6,8 +6,26 @@ export const AlarmWidget: React.FC = () => {
   const [alarmTime, setAlarmTime] = useState('');
   const [isAlarmActive, setIsAlarmActive] = useState(false);
   const [isRinging, setIsRinging] = useState(false);
+  
+  // Ref for the alarm audio
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Update current time every second
+  // Initialize audio
+  useEffect(() => {
+    // Using MyInstants for the rooster sound - generally reliable for playback
+    audioRef.current = new Audio('https://www.myinstants.com/media/sounds/rooster.mp3');
+    audioRef.current.loop = true;
+    // Removed crossOrigin to prevent potential CORS blocks on opaque playback
+    
+    return () => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current = null;
+        }
+    };
+  }, []);
+
+  // Update current time and check alarm
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
@@ -19,8 +37,9 @@ export const AlarmWidget: React.FC = () => {
         const currentMinutes = now.getMinutes().toString().padStart(2, '0');
         const currentTimeString = `${currentHours}:${currentMinutes}`;
         
-        if (currentTimeString === alarmTime) {
-          setIsRinging(true);
+        // Check if seconds are 00 to avoid multiple triggers within the same minute
+        if (currentTimeString === alarmTime && now.getSeconds() === 0) {
+          triggerAlarm();
         }
       }
     }, 1000);
@@ -28,10 +47,26 @@ export const AlarmWidget: React.FC = () => {
     return () => clearInterval(timer);
   }, [alarmTime, isAlarmActive, isRinging]);
 
-  const toggleAlarm = () => {
-    if (isRinging) {
+  const triggerAlarm = () => {
+      setIsRinging(true);
+      if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+          audioRef.current.play().catch(e => console.error("Alarm play failed", e));
+      }
+  };
+
+  const stopAlarm = () => {
       setIsRinging(false);
       setIsAlarmActive(false);
+      if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+      }
+  };
+
+  const toggleAlarmState = () => {
+    if (isRinging) {
+      stopAlarm();
     } else {
       setIsAlarmActive(!isAlarmActive);
     }
@@ -61,15 +96,16 @@ export const AlarmWidget: React.FC = () => {
             value={alarmTime}
             onChange={(e) => {
               setAlarmTime(e.target.value);
-              setIsAlarmActive(true); // Auto enable when changing time
+              setIsAlarmActive(true); 
               setIsRinging(false);
+              if (audioRef.current) audioRef.current.pause();
             }}
             className="bg-white/80 text-gray-900 font-child text-2xl rounded-lg px-4 py-2 focus:outline-none focus:ring-4 focus:ring-blue-400"
           />
         </div>
 
         <button
-          onClick={toggleAlarm}
+          onClick={toggleAlarmState}
           className={`flex items-center gap-2 px-8 py-3 rounded-full text-xl font-bold font-child transition-all transform active:scale-95 shadow-lg
             ${isRinging 
               ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
