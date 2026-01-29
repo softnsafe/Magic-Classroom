@@ -1,0 +1,5 @@
+{
+  "name": "Magic Classroom",
+  "description": "A playful, childlike classroom app where users can edit images using magic text prompts powered by Gemini.",
+  "requestFramePermissions": []
+}
