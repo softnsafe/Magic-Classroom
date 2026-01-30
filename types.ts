@@ -29,7 +29,8 @@ export type WidgetType =
   | 'ALARM'
   | 'CALENDAR'
   | 'SOUNDBOARD'
-  | 'DRAW';
+  | 'DRAW'
+  | 'SHORTCUT';
 
 export interface TodoItem {
   id: string;

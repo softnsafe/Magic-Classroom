@@ -1,6 +1,6 @@
 import React from 'react';
 import { WidgetType } from '../types';
-import { Timer, Youtube, Presentation, Globe, Sparkles, CircleDashed, FileText, StickyNote, AlarmClock, Calendar, Megaphone, Pencil } from 'lucide-react';
+import { Timer, Youtube, Presentation, Globe, Sparkles, CircleDashed, FileText, StickyNote, AlarmClock, Calendar, Megaphone, Pencil, QrCode } from 'lucide-react';
 
 interface WidgetDockProps {
   onSelect: (type: WidgetType) => void;
@@ -16,6 +16,7 @@ export const WidgetDock: React.FC<WidgetDockProps> = ({ onSelect, activeWidget, 
     { type: 'CALENDAR', icon: <Calendar />, label: 'Calendar' },
     { type: 'SOUNDBOARD', icon: <Megaphone />, label: 'Sounds' },
     { type: 'WHEEL', icon: <CircleDashed />, label: 'Wheel' },
+    { type: 'SHORTCUT', icon: <QrCode />, label: 'QR Link' },
     { type: 'YOUTUBE', icon: <Youtube />, label: 'YouTube' },
     { type: 'SLIDES', icon: <Presentation />, label: 'Slides' },
     { type: 'PDF', icon: <FileText />, label: 'PDF' },

@@ -10,12 +10,34 @@ import { AlarmWidget } from './components/widgets/AlarmWidget';
 import { CalendarWidget } from './components/widgets/CalendarWidget';
 import { SoundboardWidget } from './components/widgets/SoundboardWidget';
 import { DrawingWidget } from './components/widgets/DrawingWidget';
+import { ShortcutWidget } from './components/widgets/ShortcutWidget';
 import { editImageWithGemini, isConfigured } from './services/geminiService';
 import { WidgetType, AppStatus, ImageState } from './types';
 import { Polaroid } from './components/Polaroid';
-import { Upload, Sparkles, ListTodo, AlertTriangle, Eraser, ChevronLeft, AlertOctagon } from 'lucide-react';
+import { Upload, Sparkles, ListTodo, AlertTriangle, Eraser, ChevronLeft, AlertOctagon, Lock, Key, Unlock, Eye, EyeOff, LogOut } from 'lucide-react';
+
+// --- SECURITY CONFIGURATION ---
+// Primary: SHA-256 Hash for "teacher"
+const TARGET_HASH = "8d23cf6c86e834a7aa6eded54c26ce2bb2e74903538c61bdd5d2197997ab2f72";
+// Fallback: Base64 for "teacher" (Used if crypto.subtle is unavailable in non-secure contexts)
+const TARGET_B64 = "dGVhY2hlcg==";
+
+async function sha256(message: string) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+// ------------------------------
 
 const App: React.FC = () => {
+  // Auth State
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [authError, setAuthError] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
   const [activeWidget, setActiveWidget] = useState<WidgetType>('NONE');
   const [isNotepadOpen, setIsNotepadOpen] = useState(false);
   const [isTodoOpen, setIsTodoOpen] = useState(false);
@@ -29,15 +51,22 @@ const App: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Check API Key on mount
+  // Check API Key and Session on mount
   useEffect(() => {
     setHasApiKey(isConfigured());
+    
+    // Check if previously logged in during this session
+    const sessionAuth = sessionStorage.getItem('classroom_auth');
+    if (sessionAuth === 'true') {
+        setIsAuthenticated(true);
+    }
+    setIsCheckingAuth(false);
   }, []);
 
   // Handle Paste for Magic Art
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
-      if (activeWidget !== 'MAGIC_ART') return;
+      if (activeWidget !== 'MAGIC_ART' || !isAuthenticated) return;
 
       const items = e.clipboardData?.items;
       if (!items) return;
@@ -62,7 +91,48 @@ const App: React.FC = () => {
 
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
-  }, [activeWidget]);
+  }, [activeWidget, isAuthenticated]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanInput = passwordInput.trim();
+    let success = false;
+
+    // 1. Direct fail-safe check for "teacher" (Case Insensitive)
+    // This ensures access even if crypto APIs are blocked/unavailable
+    if (cleanInput.toLowerCase() === 'teacher') {
+        success = true;
+    } 
+    else {
+        // 2. Try cryptographic verification for other passwords if we were to change it later
+        try {
+            if (window.crypto && window.crypto.subtle) {
+                const hash = await sha256(cleanInput);
+                if (hash === TARGET_HASH) success = true;
+            } else {
+                if (btoa(cleanInput) === TARGET_B64) success = true;
+            }
+        } catch (err) {
+            console.error("Auth Error:", err);
+        }
+    }
+    
+    if (success) {
+        setIsAuthenticated(true);
+        sessionStorage.setItem('classroom_auth', 'true');
+        setAuthError(false);
+    } else {
+        setAuthError(true);
+        // We keep the input so they can fix a typo
+    }
+  };
+
+  const handleLock = () => {
+    setIsAuthenticated(false);
+    sessionStorage.removeItem('classroom_auth');
+    setPasswordInput("");
+    setAuthError(false);
+  };
 
   const handleMagic = async () => {
     setErrorMessage('');
@@ -146,6 +216,8 @@ const App: React.FC = () => {
         return <EmbedWidget key="website" type="WEBSITE" />;
       case 'WHEEL':
         return <WheelWidget key="wheel" />;
+      case 'SHORTCUT':
+        return <ShortcutWidget key="shortcut" />;
       case 'MAGIC_ART':
         return (
           <div key="magic" className="flex gap-8 items-center h-full justify-center animate-in fade-in flex-wrap overflow-auto p-4 relative w-full">
@@ -206,10 +278,80 @@ const App: React.FC = () => {
     }
   };
 
+  if (isCheckingAuth) return null;
+
+  // --- LOCK SCREEN ---
+  if (!isAuthenticated) {
+      return (
+          <div className="h-screen w-screen bg-chalkboard flex items-center justify-center relative overflow-hidden">
+               {/* Background Pattern */}
+               <div className="absolute inset-0 pointer-events-none opacity-10" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/dust.png")' }}></div>
+               
+               <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl shadow-2xl border-4 border-amber-800/50 max-w-md w-full flex flex-col items-center gap-6 animate-in zoom-in-95 duration-500">
+                    <div className="bg-amber-800 p-4 rounded-full shadow-lg border-4 border-amber-900">
+                        <Lock size={48} className="text-amber-100" />
+                    </div>
+                    
+                    <div className="text-center">
+                        <h1 className="font-chalk text-4xl text-white mb-2">Classroom Locked</h1>
+                        <p className="font-child text-amber-100/80">Teacher Access Only</p>
+                    </div>
+
+                    <form onSubmit={handleLogin} className="w-full flex flex-col gap-4">
+                        <div className="relative">
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 z-10">
+                                <Key size={20} />
+                            </div>
+                            <input 
+                                type={showPassword ? "text" : "password"}
+                                autoFocus
+                                value={passwordInput}
+                                onChange={(e) => { setPasswordInput(e.target.value); setAuthError(false); }}
+                                placeholder="Enter Password"
+                                className={`w-full pl-10 pr-12 py-3 rounded-xl bg-white/90 font-child text-lg focus:outline-none focus:ring-4 transition-all text-gray-800 ${authError ? 'ring-4 ring-red-400' : 'focus:ring-amber-500'}`}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none p-1 z-10"
+                                tabIndex={-1}
+                            >
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
+                        </div>
+                        
+                        {authError && (
+                            <div className="bg-red-500/80 text-white text-sm font-child px-4 py-2 rounded-lg text-center animate-pulse font-bold shadow-md">
+                                Incorrect password.
+                            </div>
+                        )}
+
+                        <button 
+                            type="submit"
+                            className="bg-green-500 hover:bg-green-600 text-white font-bold font-child py-3 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+                        >
+                            <Unlock size={20} />
+                            Unlock Room
+                        </button>
+                    </form>
+               </div>
+          </div>
+      )
+  }
+
   return (
     <div className="h-screen w-screen overflow-hidden bg-orange-100 flex font-child relative">
       <div className="absolute inset-0 z-0 opacity-40 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/cork-board.png")' }}></div>
       
+      {/* Lock Button (Fixed Top Left) */}
+      <button 
+        onClick={handleLock}
+        className="fixed top-4 left-4 z-50 bg-white/20 hover:bg-red-500 hover:text-white text-gray-600 backdrop-blur-sm p-2 rounded-full shadow-lg border-2 border-white/30 transition-all active:scale-95 group"
+        title="Lock Classroom"
+      >
+        <Lock size={20} className="group-hover:animate-pulse" />
+      </button>
+
       {/* API Key Warning Banner */}
       {!hasApiKey && (
         <div className="absolute bottom-0 left-0 right-0 z-[100] bg-red-600 text-white p-3 shadow-lg flex items-center justify-center gap-3 animate-bounce">
