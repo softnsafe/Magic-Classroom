@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TodoItem } from '../types';
-import { Plus, X, Check } from 'lucide-react';
+import { Plus, X, Star } from 'lucide-react';
 
 export const TodoList: React.FC = () => {
   const [tasks, setTasks] = useState<TodoItem[]>([]);
@@ -97,13 +97,13 @@ export const TodoList: React.FC = () => {
           <div key={task.id} className="flex items-start gap-3 group animate-in slide-in-from-left duration-300">
             <button 
               onClick={() => toggleTask(task.id)}
-              className={`mt-1 w-6 h-6 shrink-0 rounded-md border-2 border-gray-400 flex items-center justify-center transition-colors shadow-sm ${task.completed ? 'bg-green-400 border-green-500' : 'bg-white hover:bg-gray-50'}`}
+              className={`mt-1 w-8 h-8 shrink-0 rounded-full border-2 border-gray-300 flex items-center justify-center transition-all shadow-sm ${task.completed ? 'bg-yellow-400 border-yellow-500 scale-110 rotate-12' : 'bg-white hover:bg-gray-50'}`}
             >
-              {task.completed && <Check size={16} className="text-white" />}
+              {task.completed && <Star size={18} className="text-white fill-white" />}
             </button>
             
             <span 
-              className={`font-child text-xl flex-1 leading-snug break-words pt-0.5 ${task.completed ? 'line-through text-gray-400 decoration-2 decoration-gray-300' : 'text-gray-800'}`}
+              className={`font-child text-xl flex-1 leading-snug break-words pt-1 ${task.completed ? 'line-through text-gray-400 decoration-2 decoration-yellow-400/50' : 'text-gray-800'}`}
             >
               {task.text}
             </span>
